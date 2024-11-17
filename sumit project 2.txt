@@ -1,0 +1,199 @@
+Machine Learning
+
+1). Create a program that automatically does data processing on giving the dataset.
+
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, LabelEncoder, OneHotEncoder
+from sklearn.compose import ColumnTransformer
+
+def process_data(df):
+    # Handle missing values
+    df = df.fillna(df.mean())
+
+    # Identify categorical and numerical columns
+    categorical_columns = df.select_dtypes(include=['object']).columns
+    numerical_columns = df.select_dtypes(include=['number']).columns
+
+    # Encode categorical columns
+    if len(categorical_columns) > 0:
+        label_encoders = {}
+        for col in categorical_columns:
+            label_encoders[col] = LabelEncoder()
+            df[col] = label_encoders[col].fit_transform(df[col])
+    
+    # Feature Scaling
+    scaler = StandardScaler()
+    df[numerical_columns] = scaler.fit_transform(df[numerical_columns])
+    
+    # Split into features and target
+    X = df.drop('target', axis=1)
+    y = df['target']
+
+    # Split the data into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    
+    return X_train, X_test, y_train, y_test
+
+# Example usage
+df = pd.read_csv('your_dataset.csv')
+X_train, X_test, y_train, y_test = process_data(df)
+
+
+
+2). Create a model and integrate it with web app .
+
+from flask import Flask, request, jsonify
+import pickle
+from sklearn.datasets import load_iris
+from sklearn.ensemble import RandomForestClassifier
+
+# Create Flask app
+app = Flask(__name__)
+
+# Load or train your model
+def train_model():
+    data = load_iris()
+    X, y = data.data, data.target
+    model = RandomForestClassifier()
+    model.fit(X, y)
+    pickle.dump(model, open('model.pkl', 'wb'))
+
+# Load the trained model
+model = pickle.load(open('model.pkl', 'rb'))
+
+# Route to predict
+@app.route('/predict', methods=['POST'])
+def predict():
+    features = request.json['features']
+    prediction = model.predict([features])
+    return jsonify({'prediction': int(prediction[0])})
+
+# Run the app
+if __name__ == '__main__':
+    train_model()  # Train the model (optional if model is already trained)
+    app.run(debug=True)
+
+
+
+3). Click an image and crop the face part and show it on the main image
+
+import cv2
+
+def detect_and_crop_face(image_path):
+    # Load the image
+    img = cv2.imread(image_path)
+    
+    # Convert the image to grayscale
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    
+    # Load the Haar Cascade for face detection
+    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+    
+    # Detect faces
+    faces = face_cascade.detectMultiScale(gray, 1.1, 4)
+    
+    for (x, y, w, h) in faces:
+        # Crop the face
+        face = img[y:y+h, x:x+w]
+        # Display the cropped face
+        cv2.imshow('Cropped Face', face)
+        cv2.waitKey(0)
+    
+    cv2.destroyAllWindows()
+
+# Example usage
+detect_and_crop_face('image.jpg')
+
+
+
+4). Apply different filters over an image
+
+import cv2
+import numpy as np
+
+def apply_filters(image_path):
+    img = cv2.imread(image_path)
+
+    # Apply Gaussian Blur
+    blurred = cv2.GaussianBlur(img, (15, 15), 0)
+
+    # Apply Edge Detection
+    edges = cv2.Canny(img, 100, 200)
+
+    # Convert to Grayscale
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    # Display the images
+    cv2.imshow('Original', img)
+    cv2.imshow('Blurred', blurred)
+    cv2.imshow('Edges', edges)
+    cv2.imshow('Grayscale', gray)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+# Example usage
+apply_filters('image.jpg')
+
+
+
+
+5). Create your own custom image using numpy 
+
+import numpy as np
+import cv2
+
+def create_custom_image():
+    # Create a black image
+    img = np.zeros((512, 512, 3), np.uint8)
+
+    # Draw a red rectangle
+    cv2.rectangle(img, (100, 100), (400, 400), (0, 0, 255), -1)
+
+    # Draw a blue circle
+    cv2.circle(img, (256, 256), 50, (255, 0, 0), -1)
+
+    # Draw a green line
+    cv2.line(img, (0, 0), (512, 512), (0, 255, 0), 5)
+
+    # Display the image
+    cv2.imshow('Custom Image', img)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+# Example usage
+create_custom_image()
+
+
+
+6). Click an image and apply some cool filters on image like sunglasses, stars etc.
+
+import cv2
+
+def overlay_filter(image_path, filter_path, position=(100, 100)):
+    # Load the main image and the filter image
+    img = cv2.imread(image_path)
+    filter_img = cv2.imread(filter_path, cv2.IMREAD_UNCHANGED)
+
+    # Resize the filter to fit the face (assuming the face is already cropped)
+    filter_img = cv2.resize(filter_img, (150, 50))
+
+    # Extract the alpha channel from the filter image
+    alpha = filter_img[:, :, 3] / 255.0
+    overlay = filter_img[:, :, :3]
+
+    # Get the region of interest on the main image
+    y1, y2 = position[1], position[1] + filter_img.shape[0]
+    x1, x2 = position[0], position[0] + filter_img.shape[1]
+
+    # Blend the overlay with the main image
+    for c in range(3):
+        img[y1:y2, x1:x2, c] = (alpha * overlay[:, :, c] + (1 - alpha) * img[y1:y2, x1:x2, c])
+
+    # Display the result
+    cv2.imshow('Overlayed Image', img)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+# Example usage
+overlay_filter('face.jpg', 'sunglasses.png')

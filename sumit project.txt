@@ -1,0 +1,322 @@
+1).Send Email message using python code:-
+
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
+# Email details
+sender_email = "your_email@example.com"
+receiver_email = "recipient@example.com"
+subject = "Test Email"
+body = "This is a test email sent from Python!"
+
+# Create a MIMEText object to represent the email
+msg = MIMEMultipart()
+msg['From'] = sender_email
+msg['To'] = receiver_email
+msg['Subject'] = subject
+
+# Attach the email body to the MIMEText object
+msg.attach(MIMEText(body, 'plain'))
+
+# SMTP server configuration
+smtp_server = "smtp.example.com"  # Replace with your SMTP server
+smtp_port = 587  # Common port for SMTP with TLS
+smtp_user = "your_email@example.com"  # SMTP login
+smtp_password = "your_password"  # SMTP password
+
+# Sending the email
+try:
+    # Connect to the SMTP server
+    server = smtplib.SMTP(smtp_server, smtp_port)
+    server.starttls()  # Upgrade to a secure connection
+    server.login(smtp_user, smtp_password)  # Log in to the server
+    server.sendmail(sender_email, receiver_email, msg.as_string())  # Send the email
+    print("Email sent successfully!")
+except Exception as e:
+    print(f"Failed to send email: {e}")
+finally:
+    server.quit()  # Close the connection to the SMTP server
+
+
+
+2).Send SMS message using python code:-
+
+from twilio.rest import Client
+account_sid = 'your_account_sid'
+auth_token = 'your_auth_token'
+client = Client(account_sid, auth_token)
+
+# Sending an SMS
+message = client.messages.create(
+    body="Hello, this is a test message!",
+    from_='+1234567890',  # Your Twilio phone number
+    to='+0987654321'       # The recipient's phone number
+)
+
+print(f"Message sent with SID: {message.sid}")
+
+
+
+3).Scrap top5 search results from google using the python code:-
+
+from googlesearch import search
+import requests
+from bs4 import BeautifulSoup
+
+# Function to perform Google search and scrape top 5 results
+def scrape_google(query):
+    # Perform the Google search
+    search_results = search(query, num_results=5)
+
+    # Store the top 5 results
+    top_results = []
+
+    for url in search_results:
+        try:
+            # Make a request to the URL
+            response = requests.get(url)
+            response.raise_for_status()
+
+            # Parse the page content
+            soup = BeautifulSoup(response.text, 'html.parser')
+
+            # Extract the title of the page
+            title = soup.title.string if soup.title else 'No title found'
+
+            # Add to the top results list
+            top_results.append({'url': url, 'title': title})
+        except requests.exceptions.RequestException as e:
+            print(f"Failed to fetch {url}: {e}")
+    
+    return top_results
+
+# Example usage
+query = "Python web scraping tutorial"
+results = scrape_google(query)
+
+# Display the top 5 results
+for i, result in enumerate(results, 1):
+    print(f"Result {i}:")
+    print(f"Title: {result['title']}")
+    print(f"URL: {result['url']}\n")
+
+
+4).Find the current geo coordinates and location using the Python code:-
+
+import geocoder
+
+# Get the location based on the IP address
+g = geocoder.ip('me')
+
+# Get latitude and longitude
+latlng = g.latlng
+
+# Get the detailed location information
+location = g.address
+
+# Display the results
+print(f"Latitude and Longitude: {latlng}")
+print(f"Location: {location}")
+
+
+
+5).Convert text-to-audio using the python code:-
+
+from gtts import gTTS
+import os
+
+# The text you want to convert to audio
+text = "Hello, this is a test message converted from text to audio using Python."
+
+# Choose the language (e.g., 'en' for English)
+language = 'en'
+
+# Convert the text to speech
+speech = gTTS(text=text, lang=language, slow=False)
+
+# Save the converted audio to a file
+speech.save("output.mp3")
+
+# Play the audio (optional)
+os.system("start output.mp3")
+
+6).Control volume of you laptop using python.:-
+
+from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+from comtypes import CLSCTX_ALL
+import ctypes
+
+# Function to set the system volume
+def set_volume(level):
+    devices = AudioUtilities.GetSpeakers()
+    interface = devices.Activate(
+        IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+    volume = ctypes.cast(interface, ctypes.POINTER(IAudioEndpointVolume))
+
+    # Set the volume (range is from 0.0 to 1.0)
+    volume.SetMasterVolumeLevelScalar(level, None)
+
+# Example usage: Set volume to 50%
+set_volume(0.5)
+
+7).Connect to your mobile and send sms from your mobile messaging app using python.:-
+
+
+from adb_shell.adb_device import AdbDeviceUsb
+from adb_shell.auth.keygen import keygen
+
+# Connect to the Android device via ADB
+def connect_device():
+    adb_device = AdbDeviceUsb()
+    
+    # Generate keys for ADB if not already created
+    keygen('adbkey')
+    
+    # Load the keys
+    adb_device.connect(rsa_keys=[open('adbkey.pub').read()])
+    return adb_device
+
+# Send SMS using the default messaging app
+def send_sms(adb_device, phone_number, message):
+    # Command to send SMS using ADB shell
+    command = f'am start -a android.intent.action.SENDTO -d sms:{phone_number} --es sms_body "{message}" --ez exit_on_sent true'
+    
+    # Execute the command
+    adb_device.shell(command)
+    adb_device.shell('input keyevent 66')  # Simulate pressing the "Enter" key to send
+
+# Example usage
+adb_device = connect_device()
+send_sms(adb_device, '+1234567890', 'Hello from Python!')
+
+8).Create a function to Send bulk email using python.:-
+
+
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+def send_bulk_email(subject, body, sender_email, sender_password, recipient_emails):
+    # Set up the SMTP server
+    smtp_server = 'smtp.gmail.com'  # You can use other SMTP servers if needed
+    smtp_port = 587  # Standard port for TLS
+    
+    # Create the email content
+    message = MIMEMultipart()
+    message['From'] = sender_email
+    message['Subject'] = subject
+    
+    # Attach the email body to the message
+    message.attach(MIMEText(body, 'plain'))
+
+    # Connect to the SMTP server and send the email to each recipient
+    try:
+        server = smtplib.SMTP(smtp_server, smtp_port)
+        server.starttls()  # Enable security
+        server.login(sender_email, sender_password)
+
+        for email in recipient_emails:
+            message['To'] = email
+            server.sendmail(sender_email, email, message.as_string())
+            print(f'Email sent to {email}')
+
+        server.quit()
+        print('All emails sent successfully!')
+    
+    except Exception as e:
+        print(f'Failed to send emails: {e}')
+
+# Example usage
+subject = "Your Subject Here"
+body = "This is the body of the email."
+sender_email = "youremail@gmail.com"
+sender_password = "yourpassword"
+recipient_emails = ["email1@example.com", "email2@example.com", "email3@example.com"]
+
+send_bulk_email(subject, body, sender_email, sender_password, recipient_emails)
+
+
+
+9).Create a function to Send bulk email using python.:-
+
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+def send_bulk_email(subject, body, sender_email, sender_password, recipient_emails):
+    """
+    Send bulk emails to a list of recipients.
+
+    Parameters:
+    subject (str): The subject of the email.
+    body (str): The body content of the email.
+    sender_email (str): The sender's email address.
+    sender_password (str): The sender's email password.
+    recipient_emails (list): A list of recipient email addresses.
+
+    Returns:
+    None
+    """
+    # Set up the SMTP server details
+    smtp_server = 'smtp.gmail.com'
+    smtp_port = 587
+
+    # Create the email content
+    message = MIMEMultipart()
+    message['From'] = sender_email
+    message['Subject'] = subject
+    message.attach(MIMEText(body, 'plain'))
+
+    try:
+        # Establish connection to the SMTP server
+        server = smtplib.SMTP(smtp_server, smtp_port)
+        server.starttls()  # Start TLS for security
+        server.login(sender_email, sender_password)  # Log in to the server
+
+        # Send the email to each recipient
+        for email in recipient_emails:
+            msg = message.copy()  # Copy the message for each recipient
+            msg['To'] = email
+            server.sendmail(sender_email, email, msg.as_string())
+            print(f"Email sent to {email}")
+
+        # Close the server connection
+        server.quit()
+        print("All emails have been sent successfully!")
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+# Example usage:
+subject = "Your Subject Here"
+body = "This is the body of the email."
+sender_email = "youremail@gmail.com"
+sender_password = "yourpassword"
+recipient_emails = ["email1@example.com", "email2@example.com", "email3@example.com"]
+
+send_bulk_email(subject, body, sender_email, sender_password, recipient_emails)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
